@@ -84,15 +84,15 @@ timp=5
 f = lambda x,t: (x*x+1)*t
 
 X=np.linspace(a,b,n+1)          #discretizarea lungimii
-#T=np.linspace(0,timp,5)          #discretizarea timpului
+T=np.linspace(0,timp,100)          #discretizarea timpului
 A=np.zeros((n+1,n+1))
 B=np.zeros((n+1,1))
 
-for j in range(0,3):
+for t in T:
     for i in range(1,n):
-        B[i,0]=f(X[i],j)
+        B[i,0]=f(X[i],t)
     B[0,0]=0
-    B[n,0]=17*j
+    B[n,0]=17*t
 
 
     A[0,0]=1
