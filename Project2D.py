@@ -7,53 +7,47 @@ from scipy.linalg import lu_factor, lu_solve
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.interpolate import griddata
 
-def discretizare_patrat(n, x, y):
-    patrate = []
-    for i in range(n):
-        for j in range(n):
-            x0, x1 = x[i], x[i + 1]
-            y0, y1 = y[j], y[j + 1]
-            patrate.append(((x0, y0), (x1, y1)))
-    return patrate
 
-def discretizez_patrate(n, x, y):
-    X, Y = np.meshgrid(x, y)
+def discretizare_domeniu(n, x, y):
+    X, Y = np.meshgrid(x, y)  # Creează o rețea (meshgrid) de puncte în planul (x, y)
+    # Aplatizează matricile în vectori simpli (1D)
     X_flat = X.flatten()
     Y_flat = Y.flatten()
-    points = np.vstack((X_flat, Y_flat))
+    
+    points = np.vstack((X_flat, Y_flat)) # Combină vectorii într-o matrice 2xN, unde fiecare coloană este un punct (x_i, y_i)
     return points
 
 def discretizare_ecuatii(n, x, y):
-    total_puncte = (n + 1)**2
-    A = np.zeros((total_puncte, total_puncte))
-    h_x = x[1] - x[0]
-    h_y = y[1] - y[0]
+    total_puncte = (n + 1)**2  # Numărul total de noduri din rețea
+    A = np.zeros((total_puncte, total_puncte)) # Inițializează matricea de sistem (coeficienți) cu zerouri
+    
+    h_x = x[1] - x[0]  # Pasul pe axa x
+    h_y = y[1] - y[0]  # Pasul pe axa y
+      # Parcurge toate nodurile interioare și de pe frontieră
     for i in range(n + 1):
         for j in range(n + 1):
-            index = i * (n + 1) + j
-            if i == 0 or i == n or j == 0 or j == n:
+            index = i * (n + 1) + j  #Calculăm indexul punctului curent în vectorul 1D
+
+            if i == 0 or i == n or j == 0 or j == n:  # Condiții la frontieră (borduri) → Dirichlet: u = valoare cunoscută (de obicei 0)
                 A[index, index] = 1
             else:
-                A[index, index] = 2*(1+x[i])/h_x*2 + 4*np.log(y[j])/h_y*2
-                A[index, index - 1] = 1/2*h_x - (1+x[i])/h_x**2
-                A[index, index + 1] = 1/2*h_x - (1+x[i])/h_x**2
-                A[index, index - (n + 1)] = 1/(y[j]*h_y) - 2*np.log(y[j])/h_y*2
-                A[index, index + (n + 1)] = 1/(y[j]*h_y) - 2*np.log(y[j])/h_y*2
-    return A
+                  # Punct interior → aplicăm o schemă de diferențe finite pentru o ecuație diferențială parțială
 
-def plot_discretizare_patrat(squares, points):
-    fig, ax = plt.subplots()
-    for (x0, y0), (x1, y1) in squares:
-        rect = plt.Rectangle((x0, y0), x1 - x0, y1 - y0, edgecolor='black', facecolor='none')
-        ax.add_patch(rect)
-    ax.plot(points[0], points[1], 'ro', markersize=4, label="Noduri")
-    ax.set_xlim(points[0].min() - 0.1, points[0].max() + 0.1)
-    ax.set_ylim(points[1].min() - 0.1, points[1].max() + 0.1)
-    ax.set_aspect('equal')
-    plt.title("Discretizarea pătratului și nodurile")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+                # Coeficientul pentru punctul central u_{i,j}
+                A[index, index] = 2*(1+x[i])/h_x*2 + 4*np.log(y[j])/h_y*2
+                # Coeficientul pentru vecinul din stânga (u_{i,j-1})
+                A[index, index - 1] = 1/2*h_x - (1+x[i])/h_x**2
+                 # Coeficientul pentru vecinul din dreapta (u_{i,j+1})
+                A[index, index + 1] = 1/2*h_x - (1+x[i])/h_x**2
+                 # Coeficientul pentru vecinul de jos (u_{i-1,j})
+                A[index, index - (n + 1)] = 1/(y[j]*h_y) - 2*np.log(y[j])/h_y*2
+                 # Coeficientul pentru vecinul de sus (u_{i+1,j})
+                A[index, index + (n + 1)] = 1/(y[j]*h_y) - 2*np.log(y[j])/h_y*2
+                
+    return A # Returnează matricea sistemului de ecuații
+    
+
+
 
 def vizualizare_rezultate(x_vals, y_vals, U_sys):
     X, Y = np.meshgrid(x_vals, y_vals)
@@ -90,9 +84,8 @@ x_vals = np.linspace(a, b, n + 1)
 y_vals = np.linspace(c, d, n + 1)
 
 # Discretizare și vizualizare
-patrate = discretizare_patrat(n, x_vals, y_vals)
-puncte = discretizez_patrate(n, x_vals, y_vals)
-plot_discretizare_patrat(patrate, puncte)
+
+puncte = discretizare_domeniu(n, x_vals, y_vals)
 
 A = discretizare_ecuatii(n, x_vals, y_vals)
 
