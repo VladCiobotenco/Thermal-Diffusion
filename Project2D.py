@@ -76,7 +76,3 @@ lu, piv = lu_factor(A)
 U_sys = lu_solve((lu, piv), B)
 
 vizualizare_rezultate(x_vals, y_vals, U_sys)
-
-
-
-
