@@ -74,9 +74,9 @@ def vizualizare_rezultate(x_vals, y_vals, U_sys):
     ax.set_zlabel("Interpolated Values")
     plt.show()
 
-f = lambda x, y: x**2 + y**2 + 1
+f = lambda x, y: - 4*x - 4 - 2*(1-np.log(y))/y**2
 g_D = lambda x, y: x**2 + np.log(y)
-g_N_Fr1 = lambda x: 2*x**2 +2*x 
+g_N_Fr1 = lambda x: 2*x**2 + 2*x 
 g_N_Fr2 = lambda y: 2*np.log(y)/y 
 n = 3
 a = 2
