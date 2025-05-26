@@ -26,23 +26,25 @@ def discretizare_ecuatii(n, x, y):
       # Parcurge toate nodurile interioare și de pe frontieră
     for i in range(n + 1):
         for j in range(n + 1):
-            index = i * (n + 1) + j  #Calculăm indexul punctului curent în vectorul 1D
-
-            if i == 0 or i == n or j == 0 or j == n:  # Condiții la frontieră (borduri) → Dirichlet: u = valoare cunoscută (de obicei 0)
+            index = i * (n + 1) + j #Calculăm indexul punctului curent în vectorul 1D
+            if i == 0 or j == 0 or (i == n and j == n): # Aici setam caldura pentru Frotierele 3 si 4
                 A[index, index] = 1
             else:
-                  # Punct interior → aplicăm o schemă de diferențe finite pentru o ecuație diferențială parțială
-
-                # Coeficientul pentru punctul central u_{i,j}
-                A[index, index] = 2*(1+x[i])/h_x*2 + 4*np.log(y[j])/h_y*2
-                # Coeficientul pentru vecinul din stânga (u_{i,j-1})
-                A[index, index - 1] = 1/2*h_x - (1+x[i])/h_x**2
-                 # Coeficientul pentru vecinul din dreapta (u_{i,j+1})
-                A[index, index + 1] = 1/2*h_x - (1+x[i])/h_x**2
-                 # Coeficientul pentru vecinul de jos (u_{i-1,j})
-                A[index, index - (n + 1)] = 1/(y[j]*h_y) - 2*np.log(y[j])/h_y*2
-                 # Coeficientul pentru vecinul de sus (u_{i+1,j})
-                A[index, index + (n + 1)] = 1/(y[j]*h_y) - 2*np.log(y[j])/h_y*2
+                if i == n and j > 0 and j < n: # Setam fluxul de caldura pentru Frontiera 1
+                    A[index,index] = 3/(2*h_x) # Coeficientul pentru punctul u_{i,j}
+                    A[index,index-1] = -2/h_x # Coeficientul pentru punctul central u_{i,j-1}
+                    A[index,index-2] = 1/(2*h_x) # Coeficientul pentru punctul central u_{i,j-2}
+                else:
+                    if i > 0 and i < n and j == n: # Setam fluxul de caldura pentru Frontiera 2
+                        A[index,index] = 3/(2*h_y) # Coeficientul pentru punctul u_{i,j}
+                        A[index,index - (n + 1)] = -2/h_y # Coeficientul pentru punctul central u_{i-1,j}
+                        A[index,index - 2*(n + 1)] = 1/(2*h_y) # Coeficientul pentru punctul central u_{i-2,j}
+                    else: # Setam Caldura pentru punctele din interior 
+                        A[index, index] = 2*(1+x[i])/h_x**2 + 4*np.log(y[j])/h_y**2 # Coeficientul pentru punctul central u_{i,j}
+                        A[index, index - 1] = 1/2*h_x - (1+x[i])/h_x**2 # Coeficientul pentru punctul central u_{i,j-1}
+                        A[index, index + 1] = 1/2*h_x - (1+x[i])/h_x**2 # Coeficientul pentru punctul central u_{i,j+1}
+                        A[index, index - (n + 1)] = 1/(y[j]*h_y) - 2*np.log(y[j])/h_y**2 # Coeficientul pentru punctul central u_{i-1,j}
+                        A[index, index + (n + 1)] = 1/(y[j]*h_y) - 2*np.log(y[j])/h_y**2 # Coeficientul pentru punctul central u_{i+1,j}
                 
     return A # Returnează matricea sistemului de ecuații
     
@@ -72,9 +74,10 @@ def vizualizare_rezultate(x_vals, y_vals, U_sys):
     ax.set_zlabel("Interpolated Values")
     plt.show()
 
-f = lambda x, y: x*2 + y*2 + 1
-g = lambda x, y: x**2 + np.log(y + 1e-10)
-
+f = lambda x, y: x**2 + y**2 + 1
+g_D = lambda x, y: x**2 + np.log(y)
+g_N_Fr1 = lambda x: 2*x**2 +2*x 
+g_N_Fr2 = lambda y: 2*np.log(y)/y 
 n = 3
 a = 2
 b = 6
@@ -93,11 +96,17 @@ total_puncte = (n + 1)**2
 B = np.zeros(total_puncte)
 for i in range(n + 1):
     for j in range(n + 1):
-        index = i * (n + 1) + j
-        if i == 0 or i == n or j == 0 or j == n:
-            B[index] = g(x_vals[i], y_vals[j])
+        index = i * (n + 1) + j #Calculăm indexul punctului curent în vectorul 1D
+        if i == 0 or j == 0 or (i == n and j == n): 
+            B[index] = g_D(x_vals[i], y_vals[j]) # Valoarea punctului u_{i,j}
         else:
-            B[index] = f(x_vals[i], y_vals[j])
+            if i == n and j > 0 and j < n: 
+                B[index] = g_N_Fr1(x_vals[i]) # Valoarea punctului u_{i,j}
+            else:
+                if i > 0 and i < n and j == n:
+                    B[index] = g_N_Fr2(y_vals[j]) # Valoarea punctului u_{i,j}
+                else:
+                    B[index] = f(x_vals[i], y_vals[j]) # Valoarea punctului u_{i,j}
 
 lu, piv = lu_factor(A)
 U_sys = lu_solve((lu, piv), B)
