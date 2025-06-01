@@ -132,7 +132,7 @@ for n in n_vals:
     U_sys = rezolva_sparse(A, B)
     U_prec = U_sys.copy()
     timp = 10 
-    T = np.linspace(0, timp, timp+1)
+    T = np.linspace(1, timp, timp)
     h_t = T[1] - T[0]
 
     B_init = B.copy()
