@@ -8,17 +8,19 @@ from scipy.sparse.linalg import spsolve
 
 
 # ======================== FUNCȚII AUXILIARE =====================================
-
+# Functia f + conditii Neumann margini + solutie exacta pt verificarea erorii
 f = lambda x, y: -4 * x - 2 * (1 - np.log(y)) / y**2
 g_N_Fr1 = lambda x: 2 * x**2 + 2 * x
 g_N_Fr2 = lambda y: 2 * np.log(y) / y
 g_D = lambda x, y, t: x**2 + np.log(y) + 2*t
-
+ 
+# Discretizeaza domeniul [2,6]x[2,6] in n+1 puncte pe fiecare axa
 def discretizare_domeniu(n):
     X = np.linspace(2, 6, n+1)
     Y = np.linspace(2, 6, n+1)
     return X, Y
-
+    
+# Construieste matricea sistemului si vectorul de termen liber
 def matrice_sistem(n, x, y, t):
     total = (n + 1)**2
     B = np.zeros(total)
@@ -31,19 +33,23 @@ def matrice_sistem(n, x, y, t):
         for i in range(n + 1):
             idx = i + j * (n + 1)
             U_teoretic[idx] = g_D(x[i], y[j], t)
+              # Conditii de Dirichlet
             if i == 0 or j == 0 or (i == n and j == n):
                 A[idx, idx] = 1
                 B[idx] = g_D(x[i], y[j], t)
+                 # Conditie de Neumann pe marginea dreapta
             elif i == n and 0 < j < n:
                 A[idx, idx] = 3 / (2 * h_x)
                 A[idx, idx - 1] = -2 / h_x
                 A[idx, idx - 2] = 1 / (2 * h_x)
                 B[idx] = g_N_Fr1(x[i])
+                  # Conditie de Neumann pe marginea de sus
             elif 0 < i < n and j == n:
                 A[idx, idx] = 3 / (2 * h_y)
                 A[idx, idx - (n + 1)] = -2 / h_y
                 A[idx, idx - 2 * (n + 1)] = 1 / (2 * h_y)
                 B[idx] = g_N_Fr2(y[j])
+                # Nucleu interior - discretizare centrala
             else:
                 A[idx, idx] = 2 * (1 + x[i]) / h_x**2 + 4 * np.log(y[j]) / h_y**2
                 A[idx, idx - 1] = 1 / (2 * h_x) - (1 + x[i]) / h_x**2
@@ -52,7 +58,7 @@ def matrice_sistem(n, x, y, t):
                 A[idx, idx + (n + 1)] = 1 / (y[j] * h_y) - 2 * np.log(y[j]) / h_y**2
                 B[idx] = f(x[i], y[j])
     return A, B, U_teoretic
-
+# Interpolarea spline bidimensionala
 def spline_2D_interp(x_vals, y_vals, U_vals_flat):
     n = len(x_vals)
     m = len(y_vals)
@@ -63,7 +69,7 @@ def spline_2D_interp(x_vals, y_vals, U_vals_flat):
     X_fine, Y_fine = np.meshgrid(x_fine, y_fine)
     U_fine = spline(y_fine, x_fine)
     return X_fine, Y_fine, U_fine
-
+# Vizualizeaza solutia numerica, teoretica si eroarea dintre ele
 def vizualizare_rezultate(x_vals, y_vals, U_sys, U_teoretic, max_erori):
     X_fine, Y_fine, U_num_interp = spline_2D_interp(x_vals, y_vals, U_sys)
     _, _, U_exact_interp = spline_2D_interp(x_vals, y_vals, U_teoretic)
@@ -93,7 +99,7 @@ def vizualizare_rezultate(x_vals, y_vals, U_sys, U_teoretic, max_erori):
 
     plt.tight_layout()
     plt.show()
-
+#interpolarea polinomiala de tip Lagrange (pt eroare)
 def interpolare_lagrange(x, xi, yi):
     n = len(xi)
     L = np.zeros_like(x, dtype=float)
@@ -104,7 +110,7 @@ def interpolare_lagrange(x, xi, yi):
                 li *= (x - xi[j]) / (xi[i] - xi[j])
         L += yi[i] * li
     return L
-
+#rezolvarea sistemului liniar
 def rezolva_sparse(A,b):
     A_sparse=csr_matrix(A)
     x=spsolve(A_sparse,b)
@@ -165,7 +171,7 @@ erori_array = erori_array[masca_valida]
 n_vals_fine = np.linspace(min(n_array), max(n_array), 200)
 erori_interp = interpolare_lagrange(n_vals_fine, n_array, erori_array)
 
-
+#grafic
 plt.plot(n_array, erori_array, 'o', label='log10(Eroare absolută maximă)')
 plt.plot(n_vals_fine, erori_interp, '-', label='Interpolare Lagrange (log10)')
 plt.xlabel('n')
