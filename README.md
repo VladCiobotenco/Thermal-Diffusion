@@ -14,4 +14,4 @@ Run any script directly to see the thermal diffusion simulation in action.
 
 ## Documentation
 
-Full documentation and detailed explanations coming soon.
+Check "Thermal_diffusion.pdf" for full documentation and theoretical principles.
