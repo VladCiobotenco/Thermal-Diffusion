@@ -1,5 +1,17 @@
-# Thermal-Diffusion
+# Thermal Diffusion
 
-- __Proiect.py__ contains a 1D thermal diffusion model - learning purpose only
-- __Animation.py__ contains the visualisation of temperature variation in time
-- __Project2D+timp.py__ contains the final model for 2D thermal difussion with temperature variation and absolute error analysis
+A Python project for simulating and visualizing thermal diffusion in 1D and 2D systems using the finite difference method.
+
+## Project Files
+
+- **Proiect.py** - 1D thermal diffusion model (learning/educational purposes)
+- **Animation.py** - Visualization of temperature variation over time
+- **Project2D+timp.py** - 2D thermal diffusion model with error analysis
+
+## Quick Start
+
+Run any script directly to see the thermal diffusion simulation in action.
+
+## Documentation
+
+Full documentation and detailed explanations coming soon.
